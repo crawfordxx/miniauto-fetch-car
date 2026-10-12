@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 470" font-family="PingFang SC, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#555"/></marker>
+  </defs>
+  <rect width="900" height="470" fill="#ffffff"/>
+  <text x="450" y="32" text-anchor="middle" font-size="21" font-weight="700" fill="#1c1c1a">底边触发线：不用测距仪，也能知道物体有多远</text>
+
+  <!-- 左：侧视图 -->
+  <text x="235" y="66" text-anchor="middle" font-size="15" font-weight="700" fill="#444">① 侧面看：摄像头斜着向下看地面</text>
+  <line x1="20" y1="330" x2="470" y2="330" stroke="#444" stroke-width="2"/>
+  <text x="440" y="350" font-size="12" fill="#777">地面</text>
+  <!-- 小车 -->
+  <rect x="30" y="280" width="90" height="38" rx="6" fill="#ffe9b0" stroke="#c98a00" stroke-width="2"/>
+  <circle cx="50" cy="322" r="9" fill="#555"/><circle cx="100" cy="322" r="9" fill="#555"/>
+  <rect x="96" y="246" width="16" height="34" fill="#c98a00"/>
+  <circle cx="110" cy="246" r="8" fill="#2f855a"/>
+  <text x="70" y="304" text-anchor="middle" font-size="12" fill="#7a5600">小车</text>
+  <text x="128" y="236" font-size="12" fill="#2f855a">摄像头</text>
+  <!-- 爪子 -->
+  <path d="M120,300 L150,318 L150,326 L120,312 z" fill="#9aa" stroke="#577"/>
+  <text x="152" y="312" font-size="11" fill="#577">爪子</text>
+  <!-- 视线 -->
+  <line x1="110" y1="246" x2="215" y2="330" stroke="#c53030" stroke-width="2"/>
+  <line x1="110" y1="246" x2="300" y2="330" stroke="#dd6b20" stroke-width="2" stroke-dasharray="5 3"/>
+  <line x1="110" y1="246" x2="440" y2="330" stroke="#2b6cb0" stroke-width="2" stroke-dasharray="5 3"/>
+  <!-- 物体：近处小瓶 / 远处大瓶 -->
+  <rect x="300" y="290" width="18" height="40" rx="4" fill="#90cdf4" stroke="#2b6cb0"/>
+  <rect x="440" y="250" width="26" height="80" rx="5" fill="#90cdf4" stroke="#2b6cb0"/>
+  <text x="309" y="282" text-anchor="middle" font-size="11" fill="#2b6cb0">小瓶</text>
+  <text x="453" y="243" text-anchor="middle" font-size="11" fill="#2b6cb0">大瓶</text>
+  <circle cx="215" cy="330" r="5" fill="#c53030"/>
+  <text x="215" y="370" text-anchor="middle" font-size="12.5" fill="#c53030">触发线对应的地面点</text>
+  <text x="215" y="388" text-anchor="middle" font-size="12.5" fill="#c53030">（离爪子是固定距离）</text>
+  <line x1="150" y1="405" x2="215" y2="405" stroke="#c53030" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="182" y="425" text-anchor="middle" font-size="12.5" fill="#c53030">再直走 17 cm</text>
+  <text x="235" y="452" text-anchor="middle" font-size="13" fill="#444">物体"脚底"贴着地面 → 脚底在画面里的高度只取决于距离，与物体大小无关</text>
+
+  <!-- 右：画面 -->
+  <text x="690" y="66" text-anchor="middle" font-size="15" font-weight="700" fill="#444">② 摄像头画面（320 × 240）</text>
+  <rect x="530" y="80" width="320" height="240" fill="#f7f7f5" stroke="#333" stroke-width="2"/>
+  <text x="522" y="86" text-anchor="end" font-size="11" fill="#777">Y=0</text>
+  <text x="522" y="324" text-anchor="end" font-size="11" fill="#777">240</text>
+  <!-- 区域 -->
+  <rect x="531" y="81" width="318" height="149" fill="#ebf4ff"/>
+  <rect x="531" y="230" width="318" height="35" fill="#fff4e5"/>
+  <rect x="531" y="265" width="318" height="25" fill="#fdecec"/>
+  <rect x="531" y="290" width="318" height="29" fill="#f3d6d6"/>
+  <line x1="530" y1="230" x2="850" y2="230" stroke="#2b6cb0" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <line x1="530" y1="265" x2="850" y2="265" stroke="#dd6b20" stroke-width="1.5" stroke-dasharray="6 4"/>
+  <line x1="530" y1="290" x2="850" y2="290" stroke="#c53030" stroke-width="3"/>
+  <text x="856" y="234" font-size="11" fill="#2b6cb0">150</text>
+  <text x="856" y="269" font-size="11" fill="#dd6b20">185</text>
+  <text x="856" y="294" font-size="11" font-weight="700" fill="#c53030">210</text>
+  <text x="790" y="190" text-anchor="middle" font-size="13" fill="#2b6cb0">远：每步走 10 cm</text>
+  <text x="690" y="252" text-anchor="middle" font-size="12.5" fill="#b35400">中：每步 5 cm</text>
+  <text x="690" y="282" text-anchor="middle" font-size="12.5" fill="#c53030">近：每步 3 cm</text>
+  <text x="690" y="309" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8b1a1a">触发！慢速冲刺 17 cm 后合爪</text>
+  <!-- 目标框 -->
+  <rect x="660" y="140" width="40" height="70" fill="none" stroke="#2f855a" stroke-width="2.5"/>
+  <text x="705" y="134" font-size="12" fill="#2f855a">YOLO 方框</text>
+  <line x1="652" y1="210" x2="708" y2="210" stroke="#2f855a" stroke-width="4"/>
+  <text x="600" y="214" text-anchor="end" font-size="12" fill="#2f855a">bottomY</text>
+  <line x1="603" y1="210" x2="650" y2="210" stroke="#2f855a" stroke-width="1" marker-end="url(#a)"/>
+  <line x1="690" y1="80" x2="690" y2="130" stroke="#999" stroke-dasharray="3 3"/>
+  <text x="690" y="350" text-anchor="middle" font-size="13" fill="#444">车每往前走一步，物体的底边就往画面下方移动</text>
+  <text x="690" y="372" text-anchor="middle" font-size="13" fill="#444">越接近触发线，步子越小，免得"一步跨过去"</text>
+  <text x="690" y="404" text-anchor="middle" font-size="12" fill="#888">为什么不用更靠下的线？底边到约 218 以后快出画面，</text>
+  <text x="690" y="422" text-anchor="middle" font-size="12" fill="#888">数值会"卡住"不再变化，没法用来判断距离</text>
+</svg>

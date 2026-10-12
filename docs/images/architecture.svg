@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 520" font-family="PingFang SC, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#555"/>
+    </marker>
+  </defs>
+  <rect width="900" height="520" fill="#ffffff"/>
+  <text x="450" y="34" text-anchor="middle" font-size="22" font-weight="700" fill="#1c1c1a">系统架构：一块"大脑"指挥三个"器官"</text>
+
+  <!-- 手机 -->
+  <rect x="30" y="80" width="190" height="120" rx="14" fill="#eef4fb" stroke="#2b6cb0" stroke-width="2"/>
+  <text x="125" y="112" text-anchor="middle" font-size="17" font-weight="700" fill="#2b6cb0">手机浏览器</text>
+  <text x="125" y="140" text-anchor="middle" font-size="13" fill="#333">http://192.168.4.1</text>
+  <text x="125" y="162" text-anchor="middle" font-size="13" fill="#333">寻物 / 停止 / 返回</text>
+  <text x="125" y="182" text-anchor="middle" font-size="13" fill="#333">摇杆 / 机械臂调试</text>
+
+  <!-- 电脑 -->
+  <rect x="30" y="320" width="190" height="110" rx="14" fill="#f3f3f0" stroke="#777" stroke-width="2"/>
+  <text x="125" y="352" text-anchor="middle" font-size="17" font-weight="700" fill="#444">电脑（可选）</text>
+  <text x="125" y="380" text-anchor="middle" font-size="13" fill="#333">USB 串口 115200</text>
+  <text x="125" y="402" text-anchor="middle" font-size="13" fill="#333">fetch / stop / f 10 …</text>
+
+  <!-- 主控 -->
+  <rect x="300" y="70" width="290" height="380" rx="16" fill="#fff8e6" stroke="#c98a00" stroke-width="2.5"/>
+  <text x="445" y="102" text-anchor="middle" font-size="18" font-weight="700" fill="#9a6a00">ESP32 主控（car_web）</text>
+  <rect x="320" y="122" width="250" height="100" rx="10" fill="#ffffff" stroke="#d9b45a"/>
+  <text x="445" y="146" text-anchor="middle" font-size="14" font-weight="700" fill="#333">loop()：网页 + 串口</text>
+  <text x="445" y="170" text-anchor="middle" font-size="12.5" fill="#555">WiFi 热点 miniAuto-JOY</text>
+  <text x="445" y="190" text-anchor="middle" font-size="12.5" fill="#555">只"投递指令"、读状态</text>
+  <text x="445" y="210" text-anchor="middle" font-size="12.5" fill="#555">从不直接碰硬件</text>
+  <line x1="445" y1="222" x2="445" y2="258" stroke="#555" stroke-width="2" marker-end="url(#a)"/>
+  <text x="455" y="245" font-size="12" fill="#777">Command 队列（1 格）</text>
+  <rect x="320" y="260" width="250" height="170" rx="10" fill="#ffffff" stroke="#d9b45a"/>
+  <text x="445" y="284" text-anchor="middle" font-size="14" font-weight="700" fill="#333">robotTask：动作线程</text>
+  <text x="445" y="308" text-anchor="middle" font-size="12.5" fill="#555">搜索 → 对准 → 靠近 → 夹取</text>
+  <text x="445" y="328" text-anchor="middle" font-size="12.5" fill="#555">→ 自检 → 原路返回</text>
+  <text x="445" y="352" text-anchor="middle" font-size="12.5" fill="#555">路线记录（最多 128 段）</text>
+  <text x="445" y="372" text-anchor="middle" font-size="12.5" fill="#555">安全检查：停止 / 卸力 / 夹持超时</text>
+  <text x="445" y="396" text-anchor="middle" font-size="12.5" fill="#555">所有 I2C 读写只在这里发生</text>
+  <text x="445" y="416" text-anchor="middle" font-size="12.5" fill="#555">（避免两个线程抢总线）</text>
+
+  <!-- 视觉 -->
+  <rect x="670" y="60" width="200" height="130" rx="14" fill="#eaf7ef" stroke="#2f855a" stroke-width="2"/>
+  <text x="770" y="92" text-anchor="middle" font-size="17" font-weight="700" fill="#2f855a">ESP32-P4 视觉</text>
+  <text x="770" y="118" text-anchor="middle" font-size="13" fill="#333">GC2145 摄像头</text>
+  <text x="770" y="140" text-anchor="middle" font-size="13" fill="#333">板上离线跑 YOLO11n</text>
+  <text x="770" y="162" text-anchor="middle" font-size="13" fill="#333">输出：类别 + 方框</text>
+
+  <!-- 驱动板 -->
+  <rect x="670" y="215" width="200" height="150" rx="14" fill="#fdecec" stroke="#c53030" stroke-width="2"/>
+  <text x="770" y="247" text-anchor="middle" font-size="17" font-weight="700" fill="#c53030">驱动板</text>
+  <text x="770" y="273" text-anchor="middle" font-size="13" fill="#333">4 个编码电机（麦轮）</text>
+  <text x="770" y="295" text-anchor="middle" font-size="13" fill="#333">按厘米"定距走"</text>
+  <text x="770" y="317" text-anchor="middle" font-size="13" fill="#333">2 个 PWM 舵机（爪子/升降）</text>
+  <text x="770" y="339" text-anchor="middle" font-size="13" fill="#333">电池电压</text>
+
+  <!-- 超声波 -->
+  <rect x="670" y="390" width="200" height="70" rx="14" fill="#f1ecfb" stroke="#6b46c1" stroke-width="2"/>
+  <text x="770" y="420" text-anchor="middle" font-size="16" font-weight="700" fill="#6b46c1">超声波</text>
+  <text x="770" y="444" text-anchor="middle" font-size="13" fill="#333">只用于调试打印</text>
+
+  <!-- 连线 -->
+  <line x1="220" y1="140" x2="318" y2="160" stroke="#2b6cb0" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="262" y="132" text-anchor="middle" font-size="12" fill="#2b6cb0">WiFi HTTP</text>
+  <line x1="220" y1="375" x2="318" y2="200" stroke="#777" stroke-width="2" stroke-dasharray="6 4" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="250" y="300" font-size="12" fill="#777">USB</text>
+
+  <line x1="572" y1="300" x2="668" y2="140" stroke="#2f855a" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="612" y="200" font-size="12" fill="#2f855a" transform="rotate(-58 612 200)">I2C 0x54</text>
+  <line x1="572" y1="320" x2="668" y2="290" stroke="#c53030" stroke-width="2.5" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="600" y="296" font-size="12" fill="#c53030">I2C 0x24</text>
+  <line x1="572" y1="380" x2="668" y2="424" stroke="#6b46c1" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
+  <text x="596" y="418" font-size="12" fill="#6b46c1">I2C 0x77</text>
+
+  <text x="450" y="500" text-anchor="middle" font-size="13" fill="#777">P4 和超声波接在"扩展 I2C"上（400kHz），驱动板在主 I2C 上（100kHz）</text>
+</svg>

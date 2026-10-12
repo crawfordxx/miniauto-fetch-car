@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 440" font-family="PingFang SC, Microsoft YaHei, Noto Sans CJK SC, sans-serif">
+  <defs>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2f855a"/></marker>
+    <marker id="r" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#c53030"/></marker>
+    <marker id="b" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#2b6cb0"/></marker>
+    <!-- 一个车轮：滚子方向用斜线表示 -->
+    <g id="wl"><rect x="-11" y="-22" width="22" height="44" rx="5" fill="#555"/><path d="M-9,-14 L9,-4 M-9,-4 L9,6 M-9,6 L9,16" stroke="#ddd" stroke-width="2"/></g>
+    <g id="wr"><rect x="-11" y="-22" width="22" height="44" rx="5" fill="#555"/><path d="M9,-14 L-9,-4 M9,-4 L-9,6 M9,6 L-9,16" stroke="#ddd" stroke-width="2"/></g>
+  </defs>
+  <rect width="900" height="440" fill="#ffffff"/>
+  <text x="450" y="32" text-anchor="middle" font-size="21" font-weight="700" fill="#1c1c1a">麦克纳姆轮：四个轮子转速搭配不同，车就能前进、横移、原地转</text>
+
+  <!-- 三个面板 -->
+  <g transform="translate(150,190)">
+    <text x="0" y="-120" text-anchor="middle" font-size="16" font-weight="700" fill="#333">前进</text>
+    <rect x="-50" y="-70" width="100" height="140" rx="10" fill="#fff3d6" stroke="#c98a00" stroke-width="2"/>
+    <use href="#wl" x="-65" y="-45"/><use href="#wr" x="65" y="-45"/><use href="#wr" x="-65" y="45"/><use href="#wl" x="65" y="45"/>
+    <path d="M-88,-35 v-28" stroke="#2f855a" stroke-width="3" marker-end="url(#g)"/><path d="M88,-35 v-28" stroke="#2f855a" stroke-width="3" marker-end="url(#g)"/>
+    <path d="M-88,55 v-28" stroke="#2f855a" stroke-width="3" marker-end="url(#g)"/><path d="M88,55 v-28" stroke="#2f855a" stroke-width="3" marker-end="url(#g)"/>
+    <path d="M0,20 v-55" stroke="#2b6cb0" stroke-width="5" marker-end="url(#b)"/>
+    <text x="0" y="100" text-anchor="middle" font-size="13" fill="#333">四轮全部正转 { +, +, +, + }</text>
+  </g>
+  <g transform="translate(450,190)">
+    <text x="0" y="-120" text-anchor="middle" font-size="16" font-weight="700" fill="#333">向右平移</text>
+    <rect x="-50" y="-70" width="100" height="140" rx="10" fill="#fff3d6" stroke="#c98a00" stroke-width="2"/>
+    <use href="#wl" x="-65" y="-45"/><use href="#wr" x="65" y="-45"/><use href="#wr" x="-65" y="45"/><use href="#wl" x="65" y="45"/>
+    <path d="M-88,-35 v-28" stroke="#2f855a" stroke-width="3" marker-end="url(#g)"/><path d="M88,-63 v28" stroke="#c53030" stroke-width="3" marker-end="url(#r)"/>
+    <path d="M-88,27 v28" stroke="#c53030" stroke-width="3" marker-end="url(#r)"/><path d="M88,55 v-28" stroke="#2f855a" stroke-width="3" marker-end="url(#g)"/>
+    <path d="M-25,0 h55" stroke="#2b6cb0" stroke-width="5" marker-end="url(#b)"/>
+    <text x="0" y="100" text-anchor="middle" font-size="13" fill="#333">对角线同向：左前、右后正转</text>
+    <text x="0" y="118" text-anchor="middle" font-size="13" fill="#333">右前、左后反转</text>
+  </g>
+  <g transform="translate(750,190)">
+    <text x="0" y="-120" text-anchor="middle" font-size="16" font-weight="700" fill="#333">原地左转</text>
+    <rect x="-50" y="-70" width="100" height="140" rx="10" fill="#fff3d6" stroke="#c98a00" stroke-width="2"/>
+    <use href="#wl" x="-65" y="-45"/><use href="#wr" x="65" y="-45"/><use href="#wr" x="-65" y="45"/><use href="#wl" x="65" y="45"/>
+    <path d="M-88,-63 v28" stroke="#c53030" stroke-width="3" marker-end="url(#r)"/><path d="M88,-35 v-28" stroke="#2f855a" stroke-width="3" marker-end="url(#g)"/>
+    <path d="M-88,27 v28" stroke="#c53030" stroke-width="3" marker-end="url(#r)"/><path d="M88,55 v-28" stroke="#2f855a" stroke-width="3" marker-end="url(#g)"/>
+    <path d="M24,10 A26,26 0 1 0 -18,-20" fill="none" stroke="#2b6cb0" stroke-width="4" marker-end="url(#b)"/>
+    <text x="0" y="100" text-anchor="middle" font-size="13" fill="#333">左边两轮反转、右边两轮正转</text>
+  </g>
+
+  <!-- 公式 -->
+  <rect x="60" y="330" width="780" height="95" rx="10" fill="#f6f6f3" stroke="#ddd"/>
+  <text x="250" y="360" text-anchor="middle" font-size="14" fill="#333" font-family="Menlo, Consolas, monospace">v左前 = Vx + Vy − k·ω</text><text x="650" y="360" text-anchor="middle" font-size="14" fill="#333" font-family="Menlo, Consolas, monospace">v右前 = Vx − Vy + k·ω</text><text x="250" y="380" text-anchor="middle" font-size="14" fill="#333" font-family="Menlo, Consolas, monospace">v左后 = Vx − Vy − k·ω</text><text x="650" y="380" text-anchor="middle" font-size="14" fill="#333" font-family="Menlo, Consolas, monospace">v右后 = Vx + Vy + k·ω</text>
+  <text x="450" y="400" text-anchor="middle" font-size="13" fill="#555">Vx 前进速度，Vy 右移速度，ω 左转角速度；k = (轮距 0.140 m + 轴距 0.145 m) / 2</text>
+  <text x="450" y="418" text-anchor="middle" font-size="13" fill="#555">轮子线速度 → 转速：rpm = v ÷ (π × 0.065 m 轮径) × 60，交给驱动板做闭环和"定距走"</text>
+</svg>

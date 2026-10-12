@@ -1,0 +1,16 @@
+# 整片固件备份（体积大，且可能含设备信息）
+backup/
+# 幻尔官方资料 PDF（版权归原作者）
+docs/car_docs/
+docs/video_frames/
+docs/yolo_boot_log.txt
+# 乐鑫第三方组件（P4 视频流实验用）
+esp_*/
+# 本地杂项
+logs/
+element_clones/
+.pi/
+handoff.md
+sdkconfig.wifi
+build/
+.DS_Store
