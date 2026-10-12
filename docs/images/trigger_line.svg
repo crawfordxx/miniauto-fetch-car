@@ -32,7 +32,7 @@
   <text x="215" y="370" text-anchor="middle" font-size="12.5" fill="#c53030">触发线对应的地面点</text>
   <text x="215" y="388" text-anchor="middle" font-size="12.5" fill="#c53030">（离爪子是固定距离）</text>
   <line x1="150" y1="405" x2="215" y2="405" stroke="#c53030" stroke-width="2" marker-end="url(#a)" marker-start="url(#a)"/>
-  <text x="182" y="425" text-anchor="middle" font-size="12.5" fill="#c53030">再直走 17 cm</text>
+  <text x="182" y="425" text-anchor="middle" font-size="12.5" fill="#c53030">再直走 18 cm</text>
   <text x="235" y="452" text-anchor="middle" font-size="13" fill="#444">物体"脚底"贴着地面 → 脚底在画面里的高度只取决于距离，与物体大小无关</text>
 
   <!-- 右：画面 -->
@@ -54,7 +54,7 @@
   <text x="790" y="190" text-anchor="middle" font-size="13" fill="#2b6cb0">远：每步走 10 cm</text>
   <text x="690" y="252" text-anchor="middle" font-size="12.5" fill="#b35400">中：每步 5 cm</text>
   <text x="690" y="282" text-anchor="middle" font-size="12.5" fill="#c53030">近：每步 3 cm</text>
-  <text x="690" y="309" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8b1a1a">触发！慢速冲刺 17 cm 后合爪</text>
+  <text x="690" y="309" text-anchor="middle" font-size="12.5" font-weight="700" fill="#8b1a1a">触发！慢速冲刺 18 cm 后合爪</text>
   <!-- 目标框 -->
   <rect x="660" y="140" width="40" height="70" fill="none" stroke="#2f855a" stroke-width="2.5"/>
   <text x="705" y="134" font-size="12" fill="#2f855a">YOLO 方框</text>

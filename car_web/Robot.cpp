@@ -37,7 +37,7 @@ static constexpr float kRelocMaxM = 0.45f;
 static constexpr float kMaxStepCm = 10.0f;
 // 底边触发：地上的物体底边到达画面这条线时，离车是固定距离（和物体大小无关）
 static constexpr uint16_t kTriggerBottomY = 210;    // 底边再往下（约 218 以后）快出画面时数值会"卡住"，不能用来判断距离
-static constexpr float kFinalFromTriggerCm = 17.0f;  // 从触发线再直线走这么远，物体落在爪子中间（实测：底边 223 走 8cm 差约 10cm；底边 218 后共走 24cm 会撞上瓶子；19cm 贴太近会撞倒物品，减 2cm）
+static constexpr float kFinalFromTriggerCm = 18.0f;  // 从触发线再直线走这么远，物体落在爪子中间（实测：底边 223 走 8cm 差约 10cm；底边 218 后共走 24cm 会撞上瓶子；19cm 贴太近会撞倒物品，17cm 稍远，取 18cm）
 static constexpr float kFinalSpeedMps = 0.06f;       // 最后冲刺放慢：撞到物体时冲击小，车头不容易被别转
 static constexpr uint16_t kFarBottomY = 150;         // 底边在这条线以上（远处）每步走 kMaxStepCm
 static constexpr uint16_t kNearBottomY = 185;        // 150~185 每步 kMidStepCm，再往下每步 kFineStepCm，免得一步跨过触发线（实测 Y=163 走 10cm 直接跳到 219）
