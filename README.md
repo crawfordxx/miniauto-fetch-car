@@ -26,6 +26,7 @@
   - [9. 安全：舵机保护与随时停车](#9-安全舵机保护与随时停车)
 - [代码导读](#代码导读)
 - [使用方法](#使用方法)
+- [代码修改指南](#代码修改指南)（改 IP、改爪子、改升降臂、改识别物品……）
 - [参数调优表](#参数调优表)
 - [实测踩过的坑](#实测踩过的坑)
 - [目录结构](#目录结构)
@@ -485,6 +486,366 @@ arduino-cli upload  --fqbn esp32:esp32:esp32:UploadSpeed=115200 -p /dev/cu.usbse
 | `claw 120` / `lift 70` | 爪子（90~160）/ 升降臂（58~132）转到指定角度 |
 | `check on` / `check off` | 开关夹取自检 |
 | `color 0/1/2` | 颜色识别模式下切换红 / 蓝 / 绿 |
+
+---
+
+## 代码修改指南
+
+这一节按模块讲"想改某个东西，该去哪个文件、改哪一行、改完要注意什么"。下面写的行号对应当前版本，代码改动后行号可能会变，**以常量名为准**，在编辑器里搜名字就能找到。
+
+### 先看这张图：想改什么，去哪个文件
+
+```mermaid
+flowchart LR
+    Q1["WiFi 名称 / 密码 / IP 地址"] --> F1["car_web.ino"]
+    Q2["网页按钮、滑块、样式"] --> F2["WebPage.h"]
+    Q3["串口指令、网页指令"] --> F1
+    Q4["爪子：通道、张开 / 闭合角度、速度"] --> F3["ArmControl.h"]
+    Q5["升降臂：通道、最低 / 最高角度"] --> F3
+    Q6["夹取时用多大劲、抬多高、夹多久"] --> F4["Robot.cpp"]
+    Q7["速度、搜索、对准、靠近、触发线"] --> F4
+    Q8["返回起点、偏转补偿"] --> F4
+    Q9["电池、超时、蜂鸣器"] --> F4
+    Q10["转角校准"] --> F5["Mecanum.cpp"]
+    Q11["要找什么物品、画面镜像、颜色模式"] --> F6["Vision.cpp / Vision.h"]
+```
+
+### 改完怎么验证（每次都要做）
+
+```mermaid
+flowchart LR
+    A["改代码"] --> B["编译<br/>arduino-cli compile"]
+    B -- 报错 --> A
+    B -- 通过 --> C["烧录<br/>UploadSpeed=115200"]
+    C --> D["串口看开机信息<br/>发 status 看电池"]
+    D --> E["先把车架空<br/>测单个动作"]
+    E --> F["再放地上<br/>测完整寻物"]
+```
+
+- **涉及车轮的改动，先把车垫起来让轮子悬空**，用串口 `f 10`、`tl 30` 单独测，确认方向和距离对了再放到地上。
+- **涉及舵机的改动，先用 `claw <度>`、`lift <度>` 一点一点试**（每次 5°），听到舵机"吱吱"响、一直在用力，就说明顶到头了，马上发 `release` 卸力。
+- `ArmControl.h` 末尾有一组 `#error` 检查，角度写得前后矛盾（比如闭合角大于张开上限）时**编译会直接报错**，按报错提示改就行。
+
+---
+
+### 1. WiFi 热点：名称、密码、IP 地址
+
+文件：`car_web/car_web.ino`
+
+**改名称和密码**（第 16~17 行）：
+
+```cpp
+static constexpr char kApSsid[] = "miniAuto-JOY";   // 热点名称，手机 WiFi 列表里看到的名字
+static constexpr char kApPassword[] = "miniauto88"; // 密码，至少 8 位；写成 "" 就是不要密码
+```
+
+**改 IP 地址**（比如把 `192.168.4.1` 改成 `192.168.10.1`）：
+
+`192.168.4.1` 是 ESP32 开热点时的**默认地址**，代码里没有写这个数字，所以要改得自己加两行。第一步，在第 17 行密码下面加一个常量：
+
+```cpp
+static const IPAddress kApIp(192, 168, 10, 1);      // 想要的地址
+```
+
+第二步，在 `setup()` 里 `WiFi.softAP(...)` 那一行（第 93 行）**前面**加一行：
+
+```cpp
+  WiFi.mode(WIFI_AP);
+  WiFi.softAPConfig(kApIp, kApIp, IPAddress(255, 255, 255, 0));  // 新增：小车地址、网关、子网掩码
+  WiFi.softAP(kApSsid, kApPassword);
+```
+
+改完以后，手机浏览器要打开 `http://192.168.10.1`。**网页本身不用改**：`WebPage.h` 里的请求写的都是相对路径（`/cmd`、`/status`），换了地址照样能用。开机时串口也会打印新地址。
+
+> 注意：IP 前三段建议用 `192.168.x`，第四段用 1。不要和家里路由器的网段一样（家里路由器常用 `192.168.1.x`、`192.168.0.x`），免得手机搞混。
+
+**改成连家里的路由器**（不开热点，手机和小车连同一个 WiFi）：
+
+把第 92~93 行的
+
+```cpp
+  WiFi.mode(WIFI_AP);
+  WiFi.softAP(kApSsid, kApPassword);
+```
+
+换成
+
+```cpp
+  WiFi.mode(WIFI_STA);
+  WiFi.begin("家里WiFi名", "家里WiFi密码");
+  while (WiFi.status() != WL_CONNECTED) delay(500);
+  Serial.println(WiFi.localIP());   // 路由器分给小车的地址，手机打开这个地址
+```
+
+这块 ESP32 **只支持 2.4G WiFi**，连不上 5G 网络（名字里带 `5G` 的一般都是）。而且地址由路由器分配，每次可能不一样，要看串口打印。后面几行原来打印热点信息的 `Serial.print(...)` 可以删掉。比赛现场建议还是用热点模式，不依赖场地网络。
+
+---
+
+### 2. 手机网页
+
+文件：`car_web/WebPage.h`（整个网页是一段写在 C++ 字符串里的 HTML）
+
+**加一个按钮**，比如"只夹不回"（找到夹起后停在原地，不返回）。这个功能串口已经有了（`grab`），但网页上没有，需要改两处：
+
+① `WebPage.h` 第 42 行，"开始寻物"按钮旁边加一个按钮：
+
+```html
+<div class="row"><button class="main" onclick="cmd('fetch')">开始寻物</button><button onclick="cmd('grab')">只夹不回</button></div>
+```
+
+② `car_web.ino` 的 `handleCmd()` 里（第 49 行附近），让网页也认这条指令：
+
+```cpp
+  if (c == "fetch") {
+    cmd.type = CMD_FETCH;
+  } else if (c == "grab") {        // 新增
+    cmd.type = CMD_GRAB;            // 新增
+  } else if (c == "return") {
+```
+
+**原则：网页按钮只负责发请求，真正干活的逻辑都在 `Robot.cpp` 里**。所以加按钮通常就是 `WebPage.h` 加按钮 + `car_web.ino` 认指令这两步。
+
+**其他常改的地方：**
+
+| 想改 | 位置 | 说明 |
+|---|---|---|
+| 定距按钮的距离选项 | 第 51 行 `<select id="cm">` | 选项不能超过 `car_web.ino` 里的 `kMaxStepCm`（50） |
+| 转向角度选项 | 第 59 行 `<select id="deg">` | 不能超过 `kMaxTurnDeg`（180） |
+| "爪子张开 / 合拢"按钮角度 | 第 65 行 `arm('claw',150)` / `arm('claw',100)` | 必须在爪子允许范围内（见第 3 节） |
+| 爪子滑块范围 | 第 68 行 `min="90" max="160"` | **改了爪子角度限位，这里要一起改** |
+| 升降滑块范围 | 第 71 行 `min="58" max="132"` | **改了升降角度限位，这里要一起改** |
+| 状态刷新频率 | 第 94 行 `setInterval(poll,1000)` | 单位毫秒 |
+| 颜色 | 第 10~11 行 `:root{...}` | 第二行是深色模式的颜色 |
+
+网页的滑块范围只管手机上能拖到哪儿。超出范围的值发过来，`car_web.ino` 也会拒绝（"指令参数不正确"），**不会伤到舵机**。
+
+---
+
+### 3. 爪子（开合舵机）
+
+主要文件：`car_web/ArmControl.h`（限位和通道），`car_web/Robot.cpp`（夹取时的用法）
+
+**角度方向：数字越大，张得越开。** 90° = 完全闭合，160° = 张开上限。
+
+| 想改 | 常量 | 文件:行 | 当前值 | 说明 |
+|---|---|---|---:|---|
+| 爪子插在驱动板哪个接口 | `ARM_CLAW_PWM_CHANNEL` | ArmControl.h:24 | 1 | 填板子上印的编号 1~4 |
+| 张开上限 | `ARM_CLAW_MAX_ANGLE` | ArmControl.h:78 | 160 | 寻物时爪子张到这个角度；**不要设 180**，会顶到机械极限一直发热 |
+| 完全闭合角度 | `ARM_CLAW_HOME_ANGLE` | ArmControl.h:82 | 90 | 整个程序里爪子**永远不会比这个更合**；`ARM_CLAW_CLOSED_ANGLE` 跟着它走 |
+| 开机时的角度 | `ARM_DEFAULT_CLAW_ANGLE` | ArmControl.h:106 | 130 | 开机先停在中间，不吓到手 |
+| 转动速度 | `ARM_CLAW_SMOOTH_SPEED_DPS` | ArmControl.h:132 | 220 | 每秒最多转多少度，越小越慢越稳 |
+| 夹取时合到多少度 | `kGrabClawAngle` | Robot.cpp:51 | 90（= 闭合角） | 想夹松一点就改成 `ARM_CLAW_CLOSED_ANGLE + 5` |
+| 多少度以下算"在夹东西" | `kHoldBelowAngle` | Robot.cpp:52 | 125 | 低于它开始计夹持时间 |
+| 夹持超时 | `kMaxHoldMs` / `kMaxCarryHoldMs` | Robot.cpp:53~54 | 30 秒 / 90 秒 | 超时后**只松爪子**；后者是返回途中用的 |
+
+**换了新爪子 / 新舵机后怎么重新定角度：**
+
+1. 串口发 `release`，用手把爪子掰到大概中间；
+2. 发 `claw 130`，然后每次减 5°（`claw 125`、`claw 120`……），直到两片爪子刚好合上。**听到舵机吱吱响就停**，往回加 5°。这个数就是新的 `ARM_CLAW_HOME_ANGLE`；
+3. 同样往大加，找到张得最开、又不顶住的角度，再**少留 10° 余量**，作为 `ARM_CLAW_MAX_ANGLE`；
+4. 改完 `ArmControl.h`，**别忘了把网页滑块（`WebPage.h` 第 68 行）和按钮（第 65 行）的范围一起改**；
+5. 编译、烧录，用 `claw` 指令验证最小、最大两头。
+
+> ⚠️ **舵机安全**：开发中曾经因为爪子一直顶着用力把舵机烧冒烟。请不要删掉 `setClaw()` 里的限位（Robot.cpp 第 288 行 `constrain(...)`），也不要把 `kMaxHoldMs` 调得很大，更不要加"定时重新给舵机上力"的代码。
+
+**换接口：** 如果驱动板某个舵机接口坏了，把爪子插到别的口，然后改 `ARM_CLAW_PWM_CHANNEL`。爪子和升降臂不能用同一个编号。
+
+---
+
+### 4. 升降臂
+
+文件：`car_web/ArmControl.h`（限位），`car_web/Robot.cpp`（搬运高度）
+
+**角度方向：数字越小，臂放得越低。** 58° 贴地，132° 抬到最高。
+
+| 想改 | 常量 | 文件:行 | 当前值 | 说明 |
+|---|---|---|---:|---|
+| 插在驱动板哪个接口 | `ARM_HEIGHT_PWM_CHANNEL` | ArmControl.h:18 | 2 | 原本说明书是升降 1、爪子 2；本车接口 2 疑似坏过，所以两个对调了 |
+| 最低角度（夹取位置） | `ARM_HEIGHT_MIN_ANGLE` | ArmControl.h:44 | 58 | 夹取时臂放到这里，`ARM_HEIGHT_LOWER_ANGLE` 跟着它走 |
+| 最高角度 | `ARM_HEIGHT_MAX_ANGLE` | ArmControl.h:48 | 132 | |
+| 开机角度 | `ARM_DEFAULT_HEIGHT_ANGLE` | ArmControl.h:101 | = 最低 | |
+| 升降速度 | `ARM_HEIGHT_SMOOTH_SPEED_DPS` | ArmControl.h:120 | 75 | 每秒最多转多少度 |
+| 夹起后抬到多高 | `kCarryLiftAngle` | Robot.cpp:50 | 70 | **只抬一点**，贴地兜着走；抬太高舵机慢慢泄力，东西会掉 |
+
+**重新定角度的方法**和爪子一样：先用 `lift <度>` 一点一点试，找到爪子刚好贴地、又不顶地面的角度作为 `ARM_HEIGHT_MIN_ANGLE`。改完同步改网页滑块（`WebPage.h` 第 71 行）。
+
+**改了最低角度后，夹取的位置也会变**：臂放得更低或更高，爪子和物品接触的高度就变了，可能需要重新调第 7 节的冲刺距离 `kFinalFromTriggerCm`。
+
+---
+
+### 5. 底盘运动
+
+文件：`car_web/Robot.cpp`（速度、尺寸），`car_web/Mecanum.cpp`（转角校准）
+
+| 想改 | 常量 | 文件:行 | 当前值 | 说明 |
+|---|---|---|---:|---|
+| 车轮尺寸 | `kAxleWidthM` / `kAxleLengthM` / `kWheelDiameterM` | Robot.cpp:9~11 | 0.140 / 0.145 / 0.065 米 | 换了底盘才需要改 |
+| 定距直线速度 | `kStepSpeedMps` | Robot.cpp:14 | 0.10 m/s | 调快了刹车距离变长，距离会不准 |
+| 原地转速度 | `kTurnSpeedRadS` | Robot.cpp:15 | 1.0 rad/s | |
+| 对准时的慢转速度 | `kAlignTurnSpeedRadS` | Robot.cpp:49 | 0.4 rad/s | |
+| 最后冲刺速度 | `kFinalSpeedMps` | Robot.cpp:41 | 0.06 m/s | 慢一点，碰到物品冲击小 |
+| 摇杆最高速度 | `kJoyMaxSpeedMps` / `kJoyMaxTurnRadS` | Robot.cpp:16~17 | 0.12 m/s / 1.0 rad/s | |
+| 单次运动超时 | `kMotionTimeoutMs` | Robot.cpp:19 | 8000 ms | **调慢速度后要检查**：最长一段距离 ÷ 速度不能超过它 |
+| 网页 / 串口单次最大距离、角度 | `kMaxStepCm` / `kMaxTurnDeg` | car_web.ino:18~19 | 50 cm / 180° | |
+
+**转角不准怎么校准**（`Mecanum.cpp` 第 14 行 `kRotationDistanceScale`）：
+
+1. 地上贴一条胶带当基准线，车头对齐；
+2. 串口发 `tl 180`，量车实际转了多少度，比如 190°；
+3. 把系数改成 `180.0f / 190.0f`（指令角度 ÷ 实际角度）。
+
+**走直线车头偏怎么补**（`Robot.cpp` 第 73 行 `kYawDriftRadPerCm`，只影响返回起点）：
+
+1. 车头对齐胶带，串口发 `f 30`；
+2. 量车头偏了多少度，比如 4.5°；
+3. 系数 = 偏的角度 × 0.01745 ÷ 走的厘米数 = 4.5 × 0.01745 ÷ 30 ≈ `0.0026f`。
+
+---
+
+### 6. 视觉：找什么、怎么挑
+
+文件：`car_web/Vision.cpp`、`car_web/Vision.h`
+
+**增加 / 删除要找的物品**（`Vision.cpp` 第 18 行）：
+
+```cpp
+static constexpr uint8_t kGraspableClassIds[] = {10, 12, 14, 29, 32, 39, 41, 46, 47, 49, 51, 54, 75, 77};
+```
+
+数字是 COCO 数据集的类别编号。常用的几个：
+
+| 编号 | 物品 | 编号 | 物品 | 编号 | 物品 |
+|---:|---|---:|---|---:|---|
+| 32 | 运动球 | 39 | 瓶子 | 41 | 杯子 |
+| 46 | 香蕉 | 47 | 苹果 | 49 | 橙子 |
+| 64 | 鼠标 | 65 | 遥控器 | 67 | 手机 |
+| 73 | 书 | 76 | 剪刀 | 77 | 玩具熊 |
+
+（完整 80 类可以搜 "COCO 80 classes"，编号从 0 开始。）
+
+**怎么知道你的物品被认成了什么：** 把物品放在车前 30~50 cm，串口发 `look`，会打印画面里所有识别到的东西，比如 `[类别41* 中心X=284 框=42x42 下边Y=153]`。带 `*` 的是已经在清单里的；不带 `*` 的，把它的编号加进清单就行。**很多物品会被认成奇怪的类别**（本车实测：小瓶子被认成"花瓶""停车收费表"，比赛物品被认成"鸟"），以 `look` 打印的为准。
+
+**加了新编号后，顺便加个中文名**（`Vision.cpp` 第 209 行起的 `visionClassName()`），串口日志和网页提示里就会显示中文：
+
+```cpp
+    case 64: return "鼠标";
+```
+
+**其他视觉设置：**
+
+| 想改 | 常量 | 文件:行 | 说明 |
+|---|---|---|---|
+| 画面是否左右镜像 | `kImageMirrored` | Vision.h:11 | 物品在车左边、画面里却在右边，就是 `true`。设错了，"先夹最右边"会变成"先夹最左边" |
+| 改用颜色识别 | `kVisionUseColor` | Vision.h:9 | 改成 `true`，**P4 模块要换烧官方颜色识别固件**，画面变成 240×240 |
+| 颜色模式找什么颜色 | `s_colorTargets` | Vision.cpp:9 | 0 红、1 蓝、2 绿；也可以串口 `color 0` 临时切换 |
+| 多个物品先夹哪个 | `considerBox()` 里的 `score` | Vision.cpp:113~114 | 现在是"车实际最右边"优先；想改成"最近的优先"，把第 114 行的 `(kImageMirrored ? -cx : cx)` 换成 `(float)(y + h)`（底边越低越近） |
+
+---
+
+### 7. 寻物策略：搜索、对准、靠近、夹取
+
+文件：`car_web/Robot.cpp` 第 25~82 行，全部是可调参数，每个都有中文注释。
+
+**搜索**
+
+| 常量 | 行 | 当前值 | 调大 / 调小的效果 |
+|---|---:|---:|---|
+| `kInitialLookMs` | 68 | 4000 ms | 开始时原地先看多久 |
+| `kSearchStepRad` | 32 | 0.52 rad（30°） | 每次转多少；转太多可能把目标转过去 |
+| `kSearchSteps` | 33 | 12 | 转几次算一圈；和上一个相乘应约等于 360° |
+| `kSearchDwellMs` | 72 | 2500 ms | 每个方向停多久；远处小目标漏检多就调大 |
+| `kConfirmLookMs` | 71 | 2000 ms | 第一次看到后再确认多久 |
+| `kMaxRelocations` | 34 | 5 | 一圈没找到，最多换几次位置 |
+
+**对准和靠近**
+
+| 常量 | 行 | 当前值 | 说明 |
+|---|---:|---:|---|
+| `kCenterDeadbandPx` | 27 | 12 px | 偏差在这以内才开始往前走；老是左右来回摆就调大 |
+| `kDriftCorrectPx` | 28 | 15 px | 走的途中偏差超过它才停下来纠正 |
+| `kFinalAlignPx` | 29 | 10 px | 最后冲刺前必须对正到多少 |
+| `kFarBottomY` / `kNearBottomY` | 42~43 | 150 / 185 | 决定"远 / 中 / 近"的分界线 |
+| `kMaxStepCm` / `kMidStepCm` / `kFineStepCm` | 37 / 44~45 | 10 / 5 / 3 cm | 远、中、近各走多少一步 |
+
+**夹取（最常调的两个）**
+
+| 常量 | 行 | 当前值 | 怎么调 |
+|---|---:|---:|---|
+| `kTriggerBottomY` | 39 | 210 | 触发线。**摄像头角度动过就要重新标定** |
+| `kFinalFromTriggerCm` | 40 | 18 cm | 过线后再走多远合爪。**撞倒 / 推走物品 → 减小；夹空、爪子没碰到 → 加大**，每次改 1 cm |
+
+**标定冲刺距离的方法：** 物品放在车前约 50 cm 处，串口发 `grab`（只夹不回），看合爪那一下：
+
+- 物品被推倒或推走 → `kFinalFromTriggerCm` 减 1；
+- 爪子合上时物品还在爪子前面、没进到中间 → 加 1；
+- 爪子刚好碰到物品，物品在两片爪子正中 → 就是它了。本车实测：19 cm 会撞倒，17 cm 稍远，**18 cm 刚好**。
+
+**夹后自检**
+
+| 常量 | 行 | 当前值 | 说明 |
+|---|---:|---:|---|
+| `kMaxGrabRetries` | 55 | 2 | 没夹住最多重试几次 |
+| `kVerifyBackoffM` | 56 | 0.10 m | 夹完后退多远再检查 |
+| `kMissBottomYPx` | 57 | 170 | 后退后物品底边还在这条线以下 = 还躺在地上 |
+| `kSameTargetPx` | 78 | 40 px | 离原来位置多近才算"同一个物品" |
+
+物品比较高、夹在爪子里还露在画面中、被误判"没夹住"的时候，可以先用串口 `check off` 关掉自检试试。
+
+---
+
+### 8. 返回起点
+
+文件：`car_web/Robot.cpp`
+
+| 想改 | 位置 | 说明 |
+|---|---|---|
+| 回到起点后做什么 | 第 661 行 `setArm(ARM_HEIGHT_LOWER_ANGLE, ARM_CLAW_OPEN_ANGLE);` | 现在是"放低、张开爪子"把东西放下。想**带回来不放下**，就把这一行删掉；但要注意夹持超时（`kMaxHoldMs`）后爪子还是会自动松开 |
+| 回程每段最多走多远 / 转多少 | 第 79~80 行 `kReturnChunkM` / `kReturnChunkRad` | 0.30 m / 90°；**调大时注意不能超过运动超时** |
+| 路线最多记多少段 | 第 84 行 `kMaxPathSteps` | 128 |
+| 回程偏转补偿 | 第 73 行 `kYawDriftRadPerCm` | 见第 5 节的标定方法；设成 `0.0f` 就是不补偿 |
+
+---
+
+### 9. 电池、超时、蜂鸣器
+
+文件：`car_web/Robot.cpp`
+
+| 想改 | 常量 | 行 | 当前值 |
+|---|---|---:|---:|
+| 低电压保护 | `kMinBatteryMv` | 22 | 6800 mV（低于 6.8 V 拒绝动作） |
+| 摇杆断线自动停车 | `kJoyTimeoutMs` | 18 | 400 ms |
+| 运动超时 | `kMotionTimeoutMs` | 19 | 8000 ms |
+| 蜂鸣器开关 | `kBuzzerEnabled` | 67 | `false`（关）。改成 `true` 后，成功响 1 声、失败响 3 声 |
+
+---
+
+### 10. 加一条串口指令
+
+文件：`car_web/car_web.ino`
+
+- **马上生效、不排队的指令**（比如查询、开关某个功能）：加在 `handleImmediateSerial()` 里（第 111 行起），照着 `check` 那段写；
+- **要让车动的指令**：加在 `handleSerialLine()` 里（第 135 行起），照着 `grab` 那段写，设置 `cmd.type`，然后在 `Robot.h` 的 `CommandType` 里加一个新类型，在 `Robot.cpp` 的 `execute()` 里加一个 `case` 去执行。
+
+所有会动硬件的事情**都必须在 `Robot.cpp` 的动作线程里做**。不要在 `car_web.ino` 里直接调用电机、舵机函数，否则两个线程同时用 I2C 总线会出错（见[软件架构](#软件架构两个线程分工)）。
+
+---
+
+### 常见需求速查
+
+| 我想…… | 改这里 |
+|---|---|
+| 把 192.168.4.1 改成别的地址 | 第 1 节：`car_web.ino` 加 `softAPConfig` |
+| 改热点名字 / 密码 | `car_web.ino` 第 16~17 行 |
+| 夹子夹不紧，东西会掉 | 先检查 `kGrabClawAngle` 是否已经是闭合角 90；再把 `kCarryLiftAngle` 调低一点（贴地兜着） |
+| 夹子张不够大，物品进不去 | `ARM_CLAW_MAX_ANGLE` 调大（每次 5°，别顶住），同步改网页滑块 |
+| 升降臂放下时爪子离地太高 / 顶地 | `ARM_HEIGHT_MIN_ANGLE` 调小 / 调大，同步改网页滑块 |
+| 合爪时撞倒物品 / 夹空 | `kFinalFromTriggerCm` 减小 / 加大，每次 1 cm |
+| 换一种要找的物品 | `look` 看编号 → 加进 `kGraspableClassIds` → `visionClassName()` 加中文名 |
+| 找东西太慢 | `kSearchDwellMs` 调小（但远处目标更容易漏） |
+| 对准时左右来回摆 | `kCenterDeadbandPx` 调大，或 `kAlignTurnSpeedRadS` 调小 |
+| 回到起点车头歪了 | 重新标定 `kYawDriftRadPerCm`（第 5 节） |
+| 回到起点不要放下东西 | 删 `Robot.cpp` 第 661 行 |
+| 打开蜂鸣器 | `kBuzzerEnabled = true` |
 
 ---
 
